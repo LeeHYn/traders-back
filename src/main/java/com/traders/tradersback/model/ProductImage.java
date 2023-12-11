@@ -7,6 +7,7 @@ import javax.persistence.*;
 public class ProductImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "image_num")
     private Long id;
 
     @Column(name = "product_num")

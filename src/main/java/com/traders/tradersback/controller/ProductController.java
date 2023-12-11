@@ -100,6 +100,7 @@ public class ProductController {
     //메인 카테고리의 제품들을 가져오는 엔드포인트
     @GetMapping("/category/{mainCategoryNum}")
     public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable Long mainCategoryNum) {
+        System.out.println("dd");
         List<Product> products = productService.getProductsByMainCategory(mainCategoryNum);
         return ResponseEntity.ok(products);
     }

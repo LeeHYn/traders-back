@@ -22,8 +22,16 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
-    public AuthResponse login(String memberId, String password) {
-        Member member = memberRepository.findByMemberId(memberId);
+    public AuthResponse login(String loginInput, String password) {
+        Member member = null;
+
+        // 이메일 형식인지 확인하여 분기 처리
+        if (loginInput.contains("@")) {
+            member = memberRepository.findByMemberEmail(loginInput);
+        } else {
+            member = memberRepository.findByMemberId(loginInput);
+        }
+
         if (member != null && member.getMemberPassword().equals(password)) {
             // JWT 토큰 생성
             String token = createTokenForMember(member);
