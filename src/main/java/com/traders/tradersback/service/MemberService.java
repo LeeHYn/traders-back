@@ -39,6 +39,7 @@ public class MemberService {
         }
         throw new RuntimeException("Login failed"); // 혹은 적절한 예외 처리
     }
+    
     private String createTokenForMember(Member member) {
         // 토큰 만료 시간 설정 (예: 10시간)
         Date expiration = new Date(System.currentTimeMillis() + 36000000);
@@ -47,5 +48,10 @@ public class MemberService {
                 .withSubject(member.getMemberId().toString()) // 'subject' 클레임 설정
                 .withExpiresAt(expiration) // 만료 시간 설정
                 .sign(Algorithm.HMAC256("secret")); // 여기서 'secret'은 서명에 사용되는 비밀 키입니다.
+    }
+
+    public String findMemberIdByEmail(String email) {
+        Member member = memberRepository.findByMemberEmail(email);
+        return member != null ? member.getMemberId() : null;
     }
 }

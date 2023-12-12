@@ -40,4 +40,18 @@ public class MemberController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
         }
     }
+
+    @PostMapping("/find-id")
+    public ResponseEntity<?> findMemberId(@RequestParam String memberEmail) {
+        try {
+            String memberId = memberService.findMemberIdByEmail(memberEmail);
+            if (memberId != null) {
+                return ResponseEntity.ok(memberId);
+            } else {
+                return ResponseEntity.badRequest().body("No member found with the given email.");
+            }
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
+        }
+    }
 }
