@@ -1,7 +1,9 @@
 package com.traders.tradersback.service;
 
 import com.traders.tradersback.model.EmailVerification;
+import com.traders.tradersback.model.PasswordResetToken;
 import com.traders.tradersback.repository.EmailVerificationRepository;
+import com.traders.tradersback.repository.PasswordResetTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -18,7 +20,8 @@ public class EmailService {
     private JavaMailSender mailSender;
     @Autowired
     private EmailVerificationRepository emailVerificationRepository;
-
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
     // 이메일 인증 코드 전송
     public void sendEmailWithVerificationCode(String to) {
         String verificationCode = generateRandomSixDigitNumber();
@@ -61,5 +64,26 @@ public class EmailService {
         } else {
             return "Invalid verification code.";
         }
+    }
+
+    // 비밀번호 재설정
+    public void sendPasswordResetEmail(String to) {
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setEmail(to);
+        resetToken.setToken(token);
+        // expiryDate를 현재 시간으로부터 5분 후로 설정
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(5));
+
+        passwordResetTokenRepository.save(resetToken);
+
+        SimpleMailMessage mail = new SimpleMailMessage();
+        mail.setFrom("jemie9812@naver.com");
+        mail.setTo(to);
+        mail.setSubject("비밀번호 재설정 요청");
+        String resetLink = "http://localhost:3000/reset-password/" + token; // URL 수정
+        mail.setText("비밀번호를 재설정하려면 다음 링크를 클릭하세요: " + resetLink);
+        mailSender.send(mail);
+
     }
 }
