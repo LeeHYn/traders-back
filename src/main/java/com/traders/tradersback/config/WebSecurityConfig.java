@@ -16,6 +16,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/email/**").permitAll()
                 .antMatchers("/api/products/**").permitAll()
                 .antMatchers("/api/categories/**").permitAll()
+                .antMatchers("/api/products/add").authenticated()  // 상품 추가 API는 인증 필요
                 .anyRequest().authenticated()  // 나머지 경로는 인증 필요
                 .and()
                 .formLogin()

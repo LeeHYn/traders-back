@@ -1,9 +1,11 @@
 package com.traders.tradersback.service;
 
 import com.traders.tradersback.dto.ProductDTO;
+import com.traders.tradersback.model.Member;
 import com.traders.tradersback.model.Product;
 import com.traders.tradersback.model.ProductImage;
 import com.traders.tradersback.model.SearchHistory;
+import com.traders.tradersback.repository.MemberRepository;
 import com.traders.tradersback.repository.ProductRepository;
 import com.traders.tradersback.repository.SearchHistoryRepository;
 import com.traders.tradersback.repository.TransactionRepository;
@@ -22,17 +24,23 @@ public class ProductService {
     private SearchHistoryRepository searchHistoryRepository;
     @Autowired
     private TransactionRepository transactionRepository;
-
+    @Autowired
+    private MemberRepository memberRepository;
     // 새로운 물품을 데이터베이스에 추가하는 메소드
     public Product addProduct(ProductDTO productDTO) {
         if (productDTO.getImageUrls() == null || productDTO.getImageUrls().isEmpty()) {
-            throw new IllegalArgumentException("At least one image is required");
-        }
+        throw new IllegalArgumentException("최소 하나의 이미지가 필요합니다");
+    }
 
         try {
+            Member member = memberRepository.findByMemberId(productDTO.getMemberId());
+            if (member == null) {
+                throw new IllegalArgumentException("회원을 찾을 수 없습니다");
+            }
+
             Product product = new Product();
-            // 기존 필드 설정
-            product.setMemberNum(productDTO.getMemberNum());
+            // 찾은 회원의 memberNum을 설정
+            product.setMemberNum(member.getMemberNum());
             product.setMainCategoryNum(productDTO.getMainCategoryNum());
             product.setProductName(productDTO.getProductName());
             product.setPrice(productDTO.getPrice());

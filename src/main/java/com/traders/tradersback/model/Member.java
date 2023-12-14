@@ -8,7 +8,7 @@ public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_num")
-    private Integer memberNum;
+    private Long memberNum;
 
     @Column(name = "member_name")
     private String memberName;
@@ -39,11 +39,11 @@ public class Member {
 
     // 게터와 세터
 
-    public Integer getMemberNum() {
+    public Long getMemberNum() {
         return memberNum;
     }
 
-    public void setMemberNum(Integer memberNum) {
+    public void setMemberNum(Long memberNum) {
         this.memberNum = memberNum;
     }
 

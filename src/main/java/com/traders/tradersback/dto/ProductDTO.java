@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class ProductDTO {
-    private Long memberNum;
+    private String memberId;
     private Long mainCategoryNum;
     private String productName;
     private Integer price;
@@ -35,12 +35,12 @@ public class ProductDTO {
         this.createdAt = createdAt;
     }
 
-    public Long getMemberNum() {
-        return memberNum;
+    public String getMemberId() {
+        return memberId;
     }
 
-    public void setMemberNum(Long memberNum) {
-        this.memberNum = memberNum;
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
     }
 
     public Long getMainCategoryNum() {

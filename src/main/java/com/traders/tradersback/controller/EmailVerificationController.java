@@ -1,6 +1,7 @@
 package com.traders.tradersback.controller;
 
 import com.traders.tradersback.dto.EmailRequestDTO;
+import com.traders.tradersback.dto.PasswordResetRequestDTO;
 import com.traders.tradersback.model.EmailVerification;
 import com.traders.tradersback.repository.EmailVerificationRepository;
 import com.traders.tradersback.service.EmailService;
@@ -44,5 +45,8 @@ public class EmailVerificationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error verifying email: " + ex.getMessage());
         }
     }
+
+
+
 }
 
