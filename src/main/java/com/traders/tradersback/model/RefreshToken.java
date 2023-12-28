@@ -2,15 +2,15 @@ package com.traders.tradersback.model;
 
 import javax.persistence.*;
 import java.time.Instant;
-
 @Entity
+@Table(name = "refresh_token")
 public class RefreshToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "member_id", referencedColumnName = "id")
+    @JoinColumn(name = "member_id", referencedColumnName = "member_num")
     private Member member;
 
     @Column(nullable = false, unique = true)
@@ -34,7 +34,6 @@ public class RefreshToken {
     public void setMember(Member member) {
         this.member = member;
     }
-
     public String getToken() {
         return token;
     }
