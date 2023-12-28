@@ -40,13 +40,19 @@ public class MemberController {
     public ResponseEntity<?> login(@RequestBody MemberLoginDto memberLoginDto) {
         try {
             AuthResponse response = memberService.login(memberLoginDto.getMemberId(), memberLoginDto.getMemberPassword());
-            if (response != null) {
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.badRequest().body("Login failed");
-            }
+            return ResponseEntity.ok(response);
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestParam String refreshToken) {
+        try {
+            AuthResponse response = memberService.refreshToken(refreshToken);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
     }
 

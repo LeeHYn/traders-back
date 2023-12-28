@@ -1,20 +1,27 @@
 package com.traders.tradersback.service;
 
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.traders.tradersback.dto.AuthResponse;
 import com.traders.tradersback.model.Member;
 import com.traders.tradersback.model.PasswordResetToken;
+import com.traders.tradersback.model.RefreshToken;
 import com.traders.tradersback.repository.MemberRepository;
 import com.traders.tradersback.repository.PasswordResetTokenRepository;
+import com.traders.tradersback.repository.RefreshTokenRepository;
 import com.traders.tradersback.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class MemberService {
@@ -24,6 +31,18 @@ public class MemberService {
     private JwtTokenUtil jwtTokenUtil;
     @Autowired
     private PasswordResetTokenRepository passwordResetTokenRepository;
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
+    @Value("${jwt.refreshSecret}")
+    private String jwtRefreshSecret;
+
+    @Value("${jwt.refreshTokenValidityInMs}")
+    private Long refreshTokenValidityInMs;
+
     public Member register(Member member) {
         return memberRepository.save(member);
     }
@@ -31,7 +50,6 @@ public class MemberService {
     public AuthResponse login(String loginInput, String password) {
         Member member = null;
 
-        // 이메일 형식인지 확인하여 분기 처리
         if (loginInput.contains("@")) {
             member = memberRepository.findByMemberEmail(loginInput);
         } else {
@@ -39,22 +57,46 @@ public class MemberService {
         }
 
         if (member != null && member.getMemberPassword().equals(password)) {
-            // JWT 토큰 생성
-            String token = createTokenForMember(member);
-            return new AuthResponse(member.getMemberId(), token);
+            String accessToken = createTokenForMember(member);
+            RefreshToken refreshToken = createAndSaveRefreshTokenForMember(member);
+            return new AuthResponse(member.getMemberId(), accessToken, refreshToken.getToken());
         }
-        throw new RuntimeException("Login failed"); // 혹은 적절한 예외 처리
+        throw new RuntimeException("Login failed");
     }
-    
-    private String createTokenForMember(Member member) {
-        // 토큰 만료 시간 설정 (예: 10시간)
-        Date expiration = new Date(System.currentTimeMillis() + 36000000);
 
+    private String createTokenForMember(Member member) {
+        Date expiration = new Date(System.currentTimeMillis() + 36000000);
         return JWT.create()
-                .withSubject(member.getMemberId().toString()) // 'subject' 클레임 설정
-                .withExpiresAt(expiration) // 만료 시간 설정
-                .sign(Algorithm.HMAC256("secret")); // 여기서 'secret'은 서명에 사용되는 비밀 키입니다.
+                .withSubject(member.getMemberId().toString())
+                .withExpiresAt(expiration)
+                .sign(Algorithm.HMAC256(jwtSecret));
     }
+
+    private RefreshToken createAndSaveRefreshTokenForMember(Member member) {
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setMember(member);
+        refreshToken.setToken(generateRefreshTokenString());
+        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenValidityInMs));
+        refreshTokenRepository.save(refreshToken);
+        return refreshToken;
+    }
+
+    private String generateRefreshTokenString() {
+        return UUID.randomUUID().toString();
+    }
+
+    public AuthResponse refreshToken(String refreshTokenString) throws Exception {
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenString)
+                .orElseThrow(() -> new Exception("Invalid refresh token"));
+
+        Member member = refreshToken.getMember();
+        refreshTokenRepository.delete(refreshToken);
+        RefreshToken newRefreshToken = createAndSaveRefreshTokenForMember(member);
+        String newAccessToken = createTokenForMember(member);
+
+        return new AuthResponse(member.getMemberId(), newAccessToken, newRefreshToken.getToken());
+    }
+
 
     public String findMemberIdByEmail(String email) {
         Member member = memberRepository.findByMemberEmail(email);

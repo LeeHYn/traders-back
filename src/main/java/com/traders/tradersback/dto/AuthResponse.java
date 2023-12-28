@@ -4,27 +4,40 @@ import com.traders.tradersback.model.Member;
 
 public class AuthResponse {
     private String member;
-    private String token;
+    private String accessToken;
+    private String refreshToken;
 
-    public AuthResponse(String member, String token) {
+    public AuthResponse(String member, String accessToken, String refreshToken) {
         this.member = member;
-        this.token = token;
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+    }
+    // 새로운 생성자 - 단일 매개변수
+    public AuthResponse(String accessToken) {
+        this.accessToken = accessToken;
     }
 
-    // 게터와 세터
     public String getMember() {
         return member;
     }
 
-    public void setMember(Member member) {
-        this.member = String.valueOf(member);
+    public void setMember(String member) {
+        this.member = member;
     }
 
-    public String getToken() {
-        return token;
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 }
