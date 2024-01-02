@@ -161,15 +161,10 @@ public class ProductService {
 
     // 채팅방 생성을 위해 물품의 상태를 확인하는 메소드
     public boolean isAvailableForChat(Long productId) {
-        try {
-            Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new EntityNotFoundException("Product not found"));
-            String status = product.getProductStatus();
-            return !(status.equals("예약중") || status.equals("판매완료"));
-        } catch (EntityNotFoundException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new RuntimeException("Error checking availability for chat", ex);
-        }
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + productId));
+        String status = product.getProductStatus();
+        return !(status.equals("예약중") || status.equals("판매완료"));
     }
+
 }
