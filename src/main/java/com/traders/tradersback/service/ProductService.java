@@ -144,6 +144,13 @@ public class ProductService {
             throw new RuntimeException("Error retrieving product by id", ex);
         }
     }
+    // 채팅방 생성을 위해 물품의 상태를 확인하는 메소드
+    public boolean isAvailableForChat(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + productId));
+        String status = product.getProductStatus();
+        return !(status.equals("예약중") || status.equals("판매완료") );
+    }
 
     // 물품 상태 변경을 위한 코드
     public Product updateProductStatus(Long productId, String newStatus) {
@@ -157,14 +164,6 @@ public class ProductService {
         } catch (Exception ex) {
             throw new RuntimeException("Error updating product status", ex);
         }
-    }
-
-    // 채팅방 생성을 위해 물품의 상태를 확인하는 메소드
-    public boolean isAvailableForChat(Long productId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + productId));
-        String status = product.getProductStatus();
-        return !(status.equals("예약중") || status.equals("판매완료") );
     }
 
 }
