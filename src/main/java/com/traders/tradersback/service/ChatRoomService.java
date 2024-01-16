@@ -12,18 +12,26 @@ public class ChatRoomService {
 
     @Autowired
     private ChatRoomRepository chatRoomRepository;
+    //채팅방 생성
+    public ChatRoom createOrGetChatRoom(Long transactionNum, Long sellerId, Long buyerId) {
+        Optional<ChatRoom> existingRoom = chatRoomRepository.findByTransactionNum(transactionNum);
 
-    public ChatRoom createOrGetChatRoom(Long sellerId, Long buyerId) {
-        // 채팅방이 이미 존재하는지 검사
-        Optional<ChatRoom> existingRoom = chatRoomRepository.findBySellerIdAndBuyerId(sellerId, buyerId);
-
-        // 존재하면 반환, 아니면 새로 생성
         return existingRoom.orElseGet(() -> {
             ChatRoom chatRoom = new ChatRoom();
+            chatRoom.setTransactionId(transactionNum);
             chatRoom.setSellerId(sellerId);
             chatRoom.setBuyerId(buyerId);
-            // 추가 정보 설정 (예: 상태)
+            chatRoom.setStatus("거래중"); // 초기 상태 설정
             return chatRoomRepository.save(chatRoom);
         });
     }
+
+    //채팅방 상태 변경
+    public void updateChatRoomStatus(Long chatRoomId, String status) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new IllegalStateException("ChatRoom with id " + chatRoomId + " not found"));
+        chatRoom.setStatus(status);
+        chatRoomRepository.save(chatRoom);
+    }
+
 }

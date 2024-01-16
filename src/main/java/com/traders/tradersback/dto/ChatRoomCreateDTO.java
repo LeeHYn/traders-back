@@ -4,7 +4,7 @@ public class ChatRoomCreateDTO {
     private Long sellerId;
     private Long buyerId;
     private Long productId;
-
+    private Long transactionNum;
     // 게터와 세터
 
 
@@ -30,5 +30,13 @@ public class ChatRoomCreateDTO {
 
     public void setProductId(Long productId) {
         this.productId = productId;
+    }
+
+    public Long getTransactionNum() {
+        return transactionNum;
+    }
+
+    public void setTransactionNum(Long transactionNum) {
+        this.transactionNum = transactionNum;
     }
 }

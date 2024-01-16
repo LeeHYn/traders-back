@@ -23,9 +23,19 @@ public class ChatRoomController {
         if (!productService.isAvailableForChat(chatRoomDTO.getProductId())) {
             return ResponseEntity.badRequest().body("Product is not available for chat");
         }
-
-        // 채팅방 생성 로직
-        ChatRoom chatRoom = chatRoomService.createOrGetChatRoom(chatRoomDTO.getSellerId(), chatRoomDTO.getBuyerId());
+        ChatRoom chatRoom = chatRoomService.createOrGetChatRoom(chatRoomDTO.getTransactionNum(), chatRoomDTO.getSellerId(), chatRoomDTO.getBuyerId());
         return ResponseEntity.ok(chatRoom);
+        // 채팅방 생성 로직
     }
+
+    @PatchMapping("/update/{chatRoomId}/status")
+    public ResponseEntity<?> updateChatRoomStatus(@PathVariable Long chatRoomId, @RequestBody String status) {
+        try {
+            chatRoomService.updateChatRoomStatus(chatRoomId, status);
+            return ResponseEntity.ok().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }

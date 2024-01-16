@@ -164,7 +164,7 @@ public class ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + productId));
         String status = product.getProductStatus();
-        return !(status.equals("예약중") || status.equals("판매완료"));
+        return !(status.equals("예약중") || status.equals("판매완료") );
     }
 
 }

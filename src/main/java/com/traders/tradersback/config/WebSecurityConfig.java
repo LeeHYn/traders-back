@@ -13,6 +13,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()  // CSRF 보호 비활성화
                 .authorizeRequests()
                 .antMatchers("/api/members/**").permitAll()  //보안 해제
+                .antMatchers("/api/**").permitAll()  //보안 해제
                 .antMatchers("/api/email/**").permitAll()
                 .antMatchers("/api/products/**").permitAll()
                 .antMatchers("/api/categories/**").permitAll()

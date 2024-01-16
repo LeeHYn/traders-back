@@ -18,6 +18,11 @@ public class ChatRoom {
 
     @Column(name = "buyer_id")
     private Long buyerId;
+    @Column(name = "transaction_num")
+    private Long transactionNum; // 거래 ID
+
+    @Column(name = "status")
+    private String status; // 채팅방의 상태
 
     // 게터와 세터
     public Long getId() {
@@ -42,5 +47,21 @@ public class ChatRoom {
 
     public void setBuyerId(Long buyerId) {
         this.buyerId = buyerId;
+    }
+
+    public Long getTransactionNum() {
+        return transactionNum;
+    }
+
+    public void setTransactionId(Long transactionNum) {
+        this.transactionNum = transactionNum;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

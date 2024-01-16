@@ -29,7 +29,9 @@ public class ChatMessage {
     public Long getId() {
         return id;
     }
-
+    public Long getChatRoomId() {
+        return chatRoomId;
+    }
     public void setId(Long id) {
         this.id = id;
     }
@@ -37,4 +39,6 @@ public class ChatMessage {
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
+
+
 }

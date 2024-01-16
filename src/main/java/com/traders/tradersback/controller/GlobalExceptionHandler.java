@@ -24,5 +24,9 @@ public class GlobalExceptionHandler {
         // 로깅이나 기타 처리
         return new ResponseEntity<>("An error occurred: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    // 다른 예외 유형을 추가할 수 있습니다.
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return new ResponseEntity<>("Invalid input: " + ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
 }
