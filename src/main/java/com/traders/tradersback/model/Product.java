@@ -35,6 +35,7 @@ public class Product {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+
     //서버 측에서 자동으로 현재 시각을 설정하여 데이터베이스에 저장합니다.
     @PrePersist
     protected void onCreate() {

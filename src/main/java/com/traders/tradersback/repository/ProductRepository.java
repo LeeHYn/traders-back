@@ -27,5 +27,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // 사용 예: '노트북' 제품의 특정 날짜 범위 내 평균 가격 계산
     @Query("SELECT AVG(p.price) FROM Product p WHERE p.productName LIKE %:productName% AND p.createdAt BETWEEN :startDate AND :endDate")
     Optional<Double> findAveragePriceByProductNameAndDateRange(@Param("productName") String productName, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT p.price FROM Product p WHERE p.productName = :productName ORDER BY p.createdAt DESC")
+    List<Double> findRecentPricesByProductName(String productName);
+
 }
+
+
+
+
+
+
+
 

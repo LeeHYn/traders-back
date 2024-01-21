@@ -1,34 +1,44 @@
 package com.traders.tradersback.service;
 
+import com.traders.tradersback.dto.PriceTrendDTO;
 import com.traders.tradersback.dto.ProductDTO;
 import com.traders.tradersback.model.Member;
 import com.traders.tradersback.model.Product;
 import com.traders.tradersback.model.ProductImage;
 import com.traders.tradersback.model.SearchHistory;
-import com.traders.tradersback.repository.MemberRepository;
-import com.traders.tradersback.repository.ProductRepository;
-import com.traders.tradersback.repository.SearchHistoryRepository;
-import com.traders.tradersback.repository.TransactionRepository;
+import com.traders.tradersback.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import org.springframework.web.multipart.MultipartFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.persistence.EntityNotFoundException;
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
+
 
 @Service
 public class ProductService {
     @Autowired
     private ProductRepository productRepository;
     @Autowired
+    private ProductImageRepository productImageRepository;
+    @Autowired
     private SearchHistoryRepository searchHistoryRepository;
     @Autowired
     private TransactionRepository transactionRepository;
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private ImageService imageService; // 이 서비스는 이미지 파일을 처리하고 URL을 반환합니다.
+    private final Logger logger = LoggerFactory.getLogger(ProductService.class);
+
+
     // 새로운 물품을 데이터베이스에 추가하는 메소드
+    @Transactional
     public Product addProduct(ProductDTO productDTO) {
-        if (productDTO.getImageUrls() == null || productDTO.getImageUrls().isEmpty()) {
+        if (productDTO.getImageFiles() == null || productDTO.getImageFiles().isEmpty()) {
         throw new IllegalArgumentException("최소 하나의 이미지가 필요합니다");
     }
 
@@ -48,19 +58,22 @@ public class ProductService {
             product.setProductCondition(productDTO.getProductCondition());
             product.setProductStatus(productDTO.getProductStatus());
 
+
             // 제품 저장
             Product savedProduct = productRepository.save(product);
 
-            // 이미지 정보 저장
-            for (String imageUrl : productDTO.getImageUrls()) {
+            // 이미지 파일 처리 및 저장
+            for (MultipartFile file : productDTO.getImageFiles()) {
+                String imageUrl = imageService.saveImage(file); // 이미지 파일 저장 및 URL 반환
                 ProductImage productImage = new ProductImage();
                 productImage.setProductNum(savedProduct.getProductNum());
                 productImage.setImageUrl(imageUrl);
-                // productImageRepository.save(productImage); // 이미지 정보를 저장하는 리포지토리
+                productImageRepository.save(productImage);
             }
 
             return savedProduct;
         } catch (Exception ex) {
+            logger.error("Error adding product: ", ex); // 로그에 오류와 스택 트레이스 출력
             throw new RuntimeException("Error adding product", ex);
         }
     }
@@ -113,26 +126,10 @@ public class ProductService {
             throw new RuntimeException("Error retrieving products by main category", ex);
         }
     }
-
-    // 특정 제품의 지난 3개월 간의 평균 가격 추이를 계산하는 메소드
-    public Map<String, Double> getProductPriceTrend(String productName) {
-        try {
-            Map<String, Double> priceTrend = new LinkedHashMap<>();
-            LocalDateTime now = LocalDateTime.now();
-
-            for (int i = 3; i > 0; i--) {
-                LocalDateTime startDate = now.minusMonths(i).withDayOfMonth(1);
-                LocalDateTime endDate = now.minusMonths(i - 1).withDayOfMonth(1).minusSeconds(1);
-                Optional<Double> averagePrice = productRepository.findAveragePriceByProductNameAndDateRange(productName, startDate, endDate);
-                priceTrend.put(startDate.getMonth().toString() + " " + startDate.getYear(), averagePrice.orElse(0.0));
-            }
-
-            return priceTrend;
-        } catch (Exception ex) {
-            throw new RuntimeException("Error retrieving product price trend", ex);
-        }
+    //제품의 번호에 따른 이미지를 반환하는 메소드
+    public List<ProductImage> getProductImages(Long productNum) {
+        return productImageRepository.findByProductNum(productNum);
     }
-
     // 제품 ID로 특정 제품을 찾아 반환하는 메소드
     public Product getProductById(Long productId) {
         try {
@@ -152,6 +149,7 @@ public class ProductService {
         return !(status.equals("예약중") || status.equals("판매완료") );
     }
 
+
     // 물품 상태 변경을 위한 코드
     public Product updateProductStatus(Long productId, String newStatus) {
         try {
@@ -165,5 +163,33 @@ public class ProductService {
             throw new RuntimeException("Error updating product status", ex);
         }
     }
+    // 특정 제품의 지난 3개월 간의 평균 가격 추이를 계산하는 메소드
+    public Map<String, Double> getProductPriceTrend(String productName) {
+        try {
+            Map<String, Double> priceTrend = new LinkedHashMap<>();
+            LocalDateTime now = LocalDateTime.now();
 
+            for (int i = 2; i >= 0; i--) {
+                LocalDateTime startDate = now.minusMonths(i).withDayOfMonth(1);
+                LocalDateTime endDate = (i == 0 ? now : now.minusMonths(i - 1).withDayOfMonth(1)).minusSeconds(1);
+                Optional<Double> averagePrice = productRepository.findAveragePriceByProductNameAndDateRange(productName, startDate, endDate);
+                priceTrend.put(startDate.getMonth().toString() + " " + startDate.getYear(), averagePrice.orElse(0.0));
+            }
+
+            return priceTrend;
+        } catch (Exception ex) {
+            throw new RuntimeException("Error retrieving product price trend", ex);
+        }
+    }
+
+    public PriceTrendDTO getProductPriceTrendWithRecentPrices(String productName) {
+        Map<String, Double> averagePrices = getProductPriceTrend(productName); // 기존 메소드 사용
+        List<Double> recentPrices = productRepository.findRecentPricesByProductName(productName); // 최근 가격을 가져오는 쿼리 필요
+
+        PriceTrendDTO priceTrendDTO = new PriceTrendDTO();
+        priceTrendDTO.setAveragePrices(averagePrices);
+        priceTrendDTO.setRecentPrices(recentPrices);
+
+        return priceTrendDTO;
+    }
 }

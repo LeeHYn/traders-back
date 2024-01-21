@@ -16,11 +16,7 @@ public class ProductImage {
     @Column(name = "image_url")
     private String imageUrl;
 
-    // 생성자, 게터와 세터
-
-    public ProductImage() {
-    }
-
+    // 게터와 세터
     public Long getId() {
         return id;
     }

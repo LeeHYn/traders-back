@@ -16,6 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.time.Clock;
 
 
@@ -37,15 +40,36 @@ public class MemberController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody MemberLoginDto memberLoginDto) {
+    public ResponseEntity<?> login(@RequestBody MemberLoginDto memberLoginDto, HttpServletResponse response) {
         try {
-            AuthResponse response = memberService.login(memberLoginDto.getMemberId(), memberLoginDto.getMemberPassword());
-            return ResponseEntity.ok(response);
+            AuthResponse authResponse = memberService.login(memberLoginDto.getMemberId(), memberLoginDto.getMemberPassword());
+            String token = authResponse.getAccessToken(); // getToken 대신 getAccessToken 사용
+            // JWT 토큰을 쿠키에 저장
+            Cookie cookie = new Cookie("jwtToken", token);
+            cookie.setHttpOnly(true); // HttpOnly 설정
+            cookie.setSecure(true); // HTTPS 환경에서만 쿠키 전송
+            cookie.setPath("/"); // 쿠키의 경로 설정
+            response.addCookie(cookie);
+
+            return ResponseEntity.ok(authResponse);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        // JWT 토큰 무효화 로직 (예: 토큰 블랙리스트 처리)
+        // 쿠키 삭제
+        Cookie cookie = new Cookie("jwtToken", null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // 쿠키를 즉시 만료시킴
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok("Logged out successfully");
+    }
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshToken(@RequestParam String refreshToken) {
         try {

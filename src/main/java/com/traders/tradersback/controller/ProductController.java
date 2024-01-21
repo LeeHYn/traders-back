@@ -1,15 +1,20 @@
 package com.traders.tradersback.controller;
 
+import com.traders.tradersback.dto.PriceTrendDTO;
 import com.traders.tradersback.dto.ProductDTO;
 import com.traders.tradersback.dto.ProductStatusUpdateDTO;
 import com.traders.tradersback.model.Product;
+import com.traders.tradersback.model.ProductImage;
+import com.traders.tradersback.service.ImageService;
 import com.traders.tradersback.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,9 +24,27 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    // 물품 추가: 사용자로부터 받은 ProductDTO를 사용하여 새로운 물품을 추가합니다.
     @PostMapping("/add")
-    public ResponseEntity<?> addProduct(@RequestBody ProductDTO productDTO) {
+    public ResponseEntity<?> addProduct(
+            @RequestParam("memberId") String memberId,
+            @RequestParam("mainCategoryNum") Long mainCategoryNum,
+            @RequestParam("productName") String productName,
+            @RequestParam("price") int price,
+            @RequestParam("productDescription") String productDescription,
+            @RequestParam("productCondition") String productCondition,
+            @RequestParam("productStatus") String productStatus,
+            @RequestParam("imageFiles") List<MultipartFile> imageFiles) {
+
+        ProductDTO productDTO = new ProductDTO();
+        productDTO.setMemberId(memberId);
+        productDTO.setMainCategoryNum(mainCategoryNum);
+        productDTO.setProductName(productName);
+        productDTO.setPrice(price);
+        productDTO.setProductDescription(productDescription);
+        productDTO.setProductCondition(productCondition);
+        productDTO.setProductStatus(productStatus);
+        productDTO.setImageFiles(imageFiles);
+
         try {
             Product product = productService.addProduct(productDTO);
             return ResponseEntity.ok(product);
@@ -99,9 +122,27 @@ public class ProductController {
     }
     //메인 카테고리의 제품들을 가져오는 엔드포인트
     @GetMapping("/category/{mainCategoryNum}")
-    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable Long mainCategoryNum) {
-        System.out.println("dd");
+    public ResponseEntity<?> getProductsByCategory(@PathVariable Long mainCategoryNum) {
         List<Product> products = productService.getProductsByMainCategory(mainCategoryNum);
-        return ResponseEntity.ok(products);
+        List<ProductDTO> productDTOs = new ArrayList<>();
+
+        for (Product product : products) {
+            List<ProductImage> images = productService.getProductImages(product.getProductNum());
+            productDTOs.add(new ProductDTO(product, images));
+        }
+
+        return ResponseEntity.ok(productDTOs);
+    }
+
+
+    // 최근 거래
+    @GetMapping("/price-trend/{productName}")
+    public ResponseEntity<?> getProductPriceTrendWithRecentPrices(@PathVariable String productName) {
+        try {
+            PriceTrendDTO priceTrendDTO = productService.getProductPriceTrendWithRecentPrices(productName);
+            return ResponseEntity.ok(priceTrendDTO);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving product price trend: " + ex.getMessage());
+        }
     }
 }
