@@ -57,7 +57,7 @@ public class ProductController {
     @GetMapping("/latest")
     public ResponseEntity<?> getLatestProducts() {
         try {
-            List<Product> products = productService.getProductsInLatestOrder();
+            List<ProductDTO> products = productService.getProductsInLatestOrder();
             return ResponseEntity.ok(products);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving latest products: " + ex.getMessage());
@@ -68,7 +68,7 @@ public class ProductController {
     @GetMapping("/search/recent/{memberNum}")
     public ResponseEntity<?> getProductsBasedOnRecentSearch(@PathVariable Long memberNum) {
         try {
-            List<Product> products = productService.getProductsBasedOnRecentSearch(memberNum);
+            List<ProductDTO> products = productService.getProductsBasedOnRecentSearch(memberNum);
             return ResponseEntity.ok(products);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error searching products: " + ex.getMessage());
@@ -79,7 +79,7 @@ public class ProductController {
     @GetMapping("/top-category-products")
     public ResponseEntity<?> getTopProductsInMainCategory() {
         try {
-            List<Product> products = productService.getTopProductsInMainCategory();
+            List<ProductDTO> products = productService.getTopProductsInMainCategory();
             return ResponseEntity.ok(products);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving top category products: " + ex.getMessage());
@@ -101,15 +101,14 @@ public class ProductController {
     @GetMapping("/{productId}")
     public ResponseEntity<?> getProductById(@PathVariable Long productId) {
         try {
-            Product product = productService.getProductById(productId);
-            return ResponseEntity.ok(product);
+            ProductDTO productDTO = productService.getProductById(productId);
+            return ResponseEntity.ok(productDTO);
         } catch (EntityNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving product: " + ex.getMessage());
         }
     }
-
     //물품 상태 병경을 위한 엔드포인트
     @PostMapping("/update-status")
     public ResponseEntity<?> updateProductStatus(@RequestBody ProductStatusUpdateDTO statusUpdateDTO) {
@@ -143,6 +142,17 @@ public class ProductController {
             return ResponseEntity.ok(priceTrendDTO);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving product price trend: " + ex.getMessage());
+        }
+    }
+    // 검색어로 카테고리 또는 제품 이름 검색
+    @GetMapping("/search")
+    public ResponseEntity<?> searchProducts(@RequestParam String query) {
+        try {
+            List<ProductDTO> products = productService.searchProducts(query);
+            return ResponseEntity.ok(products);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error searching products: " + ex.getMessage());
         }
     }
 }

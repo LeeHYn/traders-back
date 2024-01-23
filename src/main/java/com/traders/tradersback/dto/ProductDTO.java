@@ -18,7 +18,7 @@ public class ProductDTO {
     private String productDescription;
     private String productCondition;
     private String productStatus;
-
+    private String mainCategoryName;
     private LocalDateTime createdAt;
 
     private List<MultipartFile> imageFiles;
@@ -43,6 +43,13 @@ public class ProductDTO {
         this.imageUrls = images.stream()
                 .map(ProductImage::getImageUrl)
                 .collect(Collectors.toList());
+    }
+    public String getMainCategoryName() {
+        return mainCategoryName;
+    }
+
+    public void setMainCategoryName(String mainCategoryName) {
+        this.mainCategoryName = mainCategoryName;
     }
     public List<String> getImageUrls() {
         return imageUrls;

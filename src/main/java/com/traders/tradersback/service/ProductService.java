@@ -2,10 +2,7 @@ package com.traders.tradersback.service;
 
 import com.traders.tradersback.dto.PriceTrendDTO;
 import com.traders.tradersback.dto.ProductDTO;
-import com.traders.tradersback.model.Member;
-import com.traders.tradersback.model.Product;
-import com.traders.tradersback.model.ProductImage;
-import com.traders.tradersback.model.SearchHistory;
+import com.traders.tradersback.model.*;
 import com.traders.tradersback.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +13,7 @@ import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -32,6 +30,8 @@ public class ProductService {
     private MemberRepository memberRepository;
     @Autowired
     private ImageService imageService; // 이 서비스는 이미지 파일을 처리하고 URL을 반환합니다.
+    @Autowired
+    private MainCategoryRepository mainCategoryRepository;
     private final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
 
@@ -77,26 +77,36 @@ public class ProductService {
             throw new RuntimeException("Error adding product", ex);
         }
     }
-
+    //제품의 번호에 따른 이미지를 반환하는 메소드
+    public List<ProductImage> getProductImages(Long productNum) {
+        return productImageRepository.findByProductNum(productNum);
+    }
     // 최신순으로 모든 제품을 반환하는 메소드
-    public List<Product> getProductsInLatestOrder() {
+    public List<ProductDTO> getProductsInLatestOrder() {
         try {
-            return productRepository.findAllByOrderByCreatedAtDesc();
+            List<Product> products = productRepository.findAllByOrderByCreatedAtDesc();
+            return products.stream().map(product -> {
+                List<ProductImage> images = getProductImages(product.getProductNum());
+                return new ProductDTO(product, images);
+            }).collect(Collectors.toList());
         } catch (Exception ex) {
             throw new RuntimeException("Error retrieving products in latest order", ex);
         }
     }
 
+
     // 사용자의 최근 검색 기반으로 제품을 검색하는 메소드
-    public List<Product> getProductsBasedOnRecentSearch(Long memberNum) {
+    public List<ProductDTO> getProductsBasedOnRecentSearch(Long memberNum) {
         try {
             List<SearchHistory> searchHistoryList = searchHistoryRepository.findByMemberNumOrderBySearchDateDesc(memberNum);
             if (!searchHistoryList.isEmpty()) {
-                // 가장 최근 검색어 가져오기
                 String recentSearchTerm = searchHistoryList.get(0).getSearchTerm();
+                List<Product> products = productRepository.findByProductNameContaining(recentSearchTerm);
 
-                // 검색어와 일치하는 제품 찾기
-                return productRepository.findByProductNameContaining(recentSearchTerm);
+                return products.stream().map(product -> {
+                    List<ProductImage> images = getProductImages(product.getProductNum());
+                    return new ProductDTO(product, images);
+                }).collect(Collectors.toList());
             }
             return new ArrayList<>();
         } catch (Exception ex) {
@@ -105,12 +115,20 @@ public class ProductService {
     }
 
     // 최근 거래량이 가장 많은 메인 카테고리의 제품들을 반환하는 메소드
-    public List<Product> getTopProductsInMainCategory() {
+    public List<ProductDTO> getTopProductsInMainCategory() {
         try {
             List<Object[]> topCategories = transactionRepository.findTopMainCategories();
             if (!topCategories.isEmpty()) {
                 Long mainCategoryNum = (Long) topCategories.get(0)[0];
-                return productRepository.findByMainCategoryNum(mainCategoryNum);
+                List<Product> products = productRepository.findByMainCategoryNum(mainCategoryNum);
+                Optional<MainCategory> mainCategoryOpt = mainCategoryRepository.findByMainCategoryNum(mainCategoryNum);
+
+                return products.stream().map(product -> {
+                    List<ProductImage> images = getProductImages(product.getProductNum());
+                    ProductDTO productDTO = new ProductDTO(product, images);
+                    mainCategoryOpt.ifPresent(mainCategory -> productDTO.setMainCategoryName(mainCategory.getMainCategoryName()));
+                    return productDTO;
+                }).collect(Collectors.toList());
             }
             return new ArrayList<>();
         } catch (Exception ex) {
@@ -126,21 +144,18 @@ public class ProductService {
             throw new RuntimeException("Error retrieving products by main category", ex);
         }
     }
-    //제품의 번호에 따른 이미지를 반환하는 메소드
-    public List<ProductImage> getProductImages(Long productNum) {
-        return productImageRepository.findByProductNum(productNum);
-    }
+
+
     // 제품 ID로 특정 제품을 찾아 반환하는 메소드
-    public Product getProductById(Long productId) {
-        try {
-            return productRepository.findById(productId)
-                    .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + productId));
-        } catch (EntityNotFoundException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new RuntimeException("Error retrieving product by id", ex);
-        }
+    public ProductDTO getProductById(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + productId));
+
+        List<ProductImage> images = productImageRepository.findByProductNum(productId);
+
+        return new ProductDTO(product, images);
     }
+
     // 채팅방 생성을 위해 물품의 상태를 확인하는 메소드
     public boolean isAvailableForChat(Long productId) {
         Product product = productRepository.findById(productId)
@@ -192,4 +207,32 @@ public class ProductService {
 
         return priceTrendDTO;
     }
+
+    // 검색어로 카테고리 이름 또는 제품 이름 검색
+    public List<ProductDTO> searchProducts(String query) {
+        try {
+            // 먼저 카테고리 이름으로 검색 시도
+            Optional<MainCategory> categoryOpt = mainCategoryRepository.findByMainCategoryName(query);
+            if (categoryOpt.isPresent()) {
+                // 카테고리 이름으로 일치하는 제품 검색
+                Long mainCategoryNum = categoryOpt.get().getMainCategoryNum();
+                List<Product> productsByCategory = productRepository.findByMainCategoryNum(mainCategoryNum);
+                return mapProductsToDTOs(productsByCategory);
+            } else {
+                // 카테고리 이름이 일치하지 않으면 제품 이름으로 검색
+                List<Product> productsByName = productRepository.findByProductNameContaining(query);
+                return mapProductsToDTOs(productsByName);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("Error searching products", ex);
+        }
+    }
+
+    private List<ProductDTO> mapProductsToDTOs(List<Product> products) {
+        return products.stream().map(product -> {
+            List<ProductImage> images = getProductImages(product.getProductNum());
+            return new ProductDTO(product, images);
+        }).collect(Collectors.toList());
+    }
+
 }
