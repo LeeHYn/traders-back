@@ -5,7 +5,6 @@ import com.traders.tradersback.dto.ProductDTO;
 import com.traders.tradersback.dto.ProductStatusUpdateDTO;
 import com.traders.tradersback.model.Product;
 import com.traders.tradersback.model.ProductImage;
-import com.traders.tradersback.service.ImageService;
 import com.traders.tradersback.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

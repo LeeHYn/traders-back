@@ -7,6 +7,7 @@ import com.traders.tradersback.dto.MemberLoginDto;
 import com.traders.tradersback.dto.PasswordResetDto;
 import com.traders.tradersback.dto.PasswordResetRequestDTO;
 import com.traders.tradersback.model.Member;
+import com.traders.tradersback.repository.MemberRepository;
 import com.traders.tradersback.service.EmailService;
 import com.traders.tradersback.service.MemberService;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,7 +30,8 @@ public class MemberController {
     private static final Logger logger = LoggerFactory.getLogger(MemberController.class);
     @Autowired
     private MemberService memberService;
-
+    @Autowired
+    private MemberRepository memberRepository;
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Member member) {
         try {
@@ -119,4 +122,16 @@ public class MemberController {
         }
     }
 
+    @GetMapping("/getMemberNum/{memberId}")
+    public ResponseEntity<?> getMemberNumByMemberId(@PathVariable String memberId) {
+        try {
+            Member member = memberRepository.findByMemberId(memberId);
+            if (member == null) {
+                throw new EntityNotFoundException("Member not found with memberId: " + memberId);
+            }
+            return ResponseEntity.ok(member.getMemberNum());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
