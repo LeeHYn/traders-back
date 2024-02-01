@@ -16,24 +16,25 @@ import org.slf4j.LoggerFactory;
 @RequestMapping("/api/chat")
 public class ChatRoomController {
 
+
+
     @Autowired
     private ChatRoomService chatRoomService;
     @Autowired
     private ProductService productService;
     private static final Logger logger = LoggerFactory.getLogger(ChatRoomController.class);
 
+
     @PostMapping("/create")
     public ResponseEntity<?> createChatRoom(@RequestBody ChatRoomCreateDTO chatRoomDTO) {
         logger.info("Creating chat room with data: {}", chatRoomDTO);
 
-        // 상품 상태 확인 로직
         if (!productService.isAvailableForChat(chatRoomDTO.getProductId())) {
             return ResponseEntity.badRequest().body("Product is not available for chat");
         }
 
-        ChatRoom chatRoom = chatRoomService.createOrGetChatRoom(chatRoomDTO.getTransactionNum(), chatRoomDTO.getSellerId(), chatRoomDTO.getBuyerId());
+        ChatRoom chatRoom = chatRoomService.createOrGetChatRoom(chatRoomDTO.getSellerId(), chatRoomDTO.getBuyerId(), chatRoomDTO.getProductId(), chatRoomDTO.getStatus());
         return ResponseEntity.ok(chatRoom);
-        // 채팅방 생성 로직
     }
 
     @PatchMapping("/update/{chatRoomId}/status")
@@ -45,5 +46,4 @@ public class ChatRoomController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
 }

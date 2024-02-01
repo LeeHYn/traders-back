@@ -5,8 +5,9 @@ public class ChatRoomCreateDTO {
     private Long buyerId;
     private Long productId;
     private Long transactionNum;
-    // 게터와 세터
+    private String status;
 
+    // 게터와 세터
 
     public Long getSellerId() {
         return sellerId;
@@ -38,5 +39,13 @@ public class ChatRoomCreateDTO {
 
     public void setTransactionNum(Long transactionNum) {
         this.transactionNum = transactionNum;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

@@ -2,8 +2,10 @@ package com.traders.tradersback.service;
 
 import com.traders.tradersback.model.ChatRoom;
 import com.traders.tradersback.model.Member;
+import com.traders.tradersback.model.Transaction;
 import com.traders.tradersback.repository.ChatRoomRepository;
 import com.traders.tradersback.repository.MemberRepository;
+import com.traders.tradersback.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,34 +19,46 @@ public class ChatRoomService {
 
     @Autowired
     private ChatRoomRepository chatRoomRepository;
-
     @Autowired
-    private MemberRepository memberRepository;
+    private TransactionRepository transactionRepository;
+    @Autowired
     private static final Logger logger = LoggerFactory.getLogger(ChatRoomService.class);
 
-    //채팅방 생성
-    public ChatRoom createOrGetChatRoom(Long transactionNum, Long sellerId, Long buyerId) {
-        logger.info("Creating or getting chat room for transactionNum: {}, sellerId: {}, buyerId: {}", transactionNum, sellerId, buyerId);
+    public ChatRoom createOrGetChatRoom(Long sellerId, Long buyerId, Long productId, String status) {
+        // 거래(transaction) 정보 생성 또는 확인
+        Transaction transaction = createOrGetTransaction(sellerId, buyerId, productId);
 
-        // 나머지 로직은 동일
-        Optional<ChatRoom> existingRoom = chatRoomRepository.findByTransactionNum(transactionNum);
+        // 채팅방 조회 또는 생성
+        Optional<ChatRoom> existingRoom = chatRoomRepository.findByProductIdAndSellerIdAndBuyerId(productId, sellerId, buyerId);
         return existingRoom.orElseGet(() -> {
             ChatRoom chatRoom = new ChatRoom();
-            chatRoom.setTransactionId(transactionNum);
-            chatRoom.setSellerId(sellerId); // sellerId는 이미 memberNum 형태로 제공됨
-            chatRoom.setBuyerId(buyerId); // buyerId는 변환된 memberNum
-            chatRoom.setStatus("거래중");
+            chatRoom.setSellerId(sellerId);
+            chatRoom.setBuyerId(buyerId);
+            chatRoom.setProductId(productId);
+            chatRoom.setStatus(status); // 상태 설정
+            chatRoom.setTransactionId(transaction.getTransactionNum()); // 거래 ID 설정
             return chatRoomRepository.save(chatRoom);
         });
     }
 
+    private Transaction createOrGetTransaction(Long sellerId, Long buyerId, Long productId) {
+        // 거래 확인 로직 (예: productId, sellerId, buyerId를 기준으로 기존 거래 확인)
+        Optional<Transaction> existingTransaction = transactionRepository.findByProductIdAndSellerIdAndBuyerId(productId, sellerId, buyerId);
+        return existingTransaction.orElseGet(() -> {
+            // 새 거래 생성
+            Transaction newTransaction = new Transaction();
+            newTransaction.setSellerNum(sellerId);
+            newTransaction.setBuyerNum(buyerId);
+            newTransaction.setProductNum(productId);
+            newTransaction.setTransactionStatus("진행중"); // 초기 상태 설정
+            return transactionRepository.save(newTransaction);
+        });
+    }
 
-    //채팅방 상태 변경
     public void updateChatRoomStatus(Long chatRoomId, String status) {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new IllegalStateException("ChatRoom with id " + chatRoomId + " not found"));
         chatRoom.setStatus(status);
         chatRoomRepository.save(chatRoom);
     }
-
 }
