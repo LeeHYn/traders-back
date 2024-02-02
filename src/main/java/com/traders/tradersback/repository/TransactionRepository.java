@@ -13,5 +13,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Object[]> findTopMainCategories();
 
     // 거래 정보 조회를 위한 메소드
-    Optional<Transaction> findByProductIdAndSellerIdAndBuyerId(Long productId, Long sellerId, Long buyerId);
+    Optional<Transaction> findByProductNumAndSellerNumAndBuyerNum(Long productNum, Long sellerNum, Long buyerNum);
 }

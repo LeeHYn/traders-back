@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,13 +44,13 @@ public class ChatRoomService {
 
     private Transaction createOrGetTransaction(Long sellerId, Long buyerId, Long productId) {
         // 거래 확인 로직 (예: productId, sellerId, buyerId를 기준으로 기존 거래 확인)
-        Optional<Transaction> existingTransaction = transactionRepository.findByProductIdAndSellerIdAndBuyerId(productId, sellerId, buyerId);
+        Optional<Transaction> existingTransaction = transactionRepository.findByProductNumAndSellerNumAndBuyerNum(productId, sellerId, buyerId);
         return existingTransaction.orElseGet(() -> {
-            // 새 거래 생성
             Transaction newTransaction = new Transaction();
             newTransaction.setSellerNum(sellerId);
             newTransaction.setBuyerNum(buyerId);
             newTransaction.setProductNum(productId);
+            newTransaction.setTransactionDate(LocalDateTime.now()); // 현재 날짜와 시간 설정
             newTransaction.setTransactionStatus("진행중"); // 초기 상태 설정
             return transactionRepository.save(newTransaction);
         });
