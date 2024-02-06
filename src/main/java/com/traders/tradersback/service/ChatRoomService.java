@@ -62,4 +62,10 @@ public class ChatRoomService {
         chatRoom.setStatus(status);
         chatRoomRepository.save(chatRoom);
     }
+
+    // 채팅방 정보 조회 메소드
+    public ChatRoom getChatRoomById(Long chatRoomId) {
+        return chatRoomRepository.findById(chatRoomId).orElseThrow(() ->
+                new EntityNotFoundException("ChatRoom with id " + chatRoomId + " not found"));
+    }
 }

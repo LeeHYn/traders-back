@@ -29,15 +29,29 @@ public class ChatMessage {
     public Long getId() {
         return id;
     }
-    public Long getChatRoomId() {
-        return chatRoomId;
-    }
     public void setId(Long id) {
         this.id = id;
     }
 
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public Long getChatRoomId() {
+        return chatRoomId;
+    }
+
+    public void setChatRoomId(Long chatRoomId) {
+        this.chatRoomId = chatRoomId;
+    }
+
+
+    public void setSenderId(Long senderId) {
+        this.senderId = senderId;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
 

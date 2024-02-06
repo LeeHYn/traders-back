@@ -24,6 +24,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/products/add", "/api/fraud/report").authenticated()
                 // 그 외 모든 요청에 대해서는 접근 허용
                 .antMatchers("/**").permitAll()
+                .antMatchers("/api/chat/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin().and()  // 필요한 경우 로그인 설정

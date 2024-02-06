@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.EntityNotFoundException;
 
 
 @RestController
@@ -46,4 +47,17 @@ public class ChatRoomController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    // 채팅방 정보 조회 API
+    @GetMapping("/room/{chatRoomId}")
+    public ResponseEntity<?> getChatRoomById(@PathVariable Long chatRoomId) {
+        try {
+            ChatRoom chatRoom = chatRoomService.getChatRoomById(chatRoomId);
+            return ResponseEntity.ok(chatRoom);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("An error occurred: " + e.getMessage());
+        }
+    }
 }
+
