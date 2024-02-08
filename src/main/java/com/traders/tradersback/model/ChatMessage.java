@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "chatmessage")
+@Table(name = "chat_message")
 public class ChatMessage {
 
     @Id
@@ -55,4 +55,15 @@ public class ChatMessage {
     }
 
 
+    public String getMessage() {
+        return message;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public Long getSenderId() {
+        return senderId;
+    }
 }

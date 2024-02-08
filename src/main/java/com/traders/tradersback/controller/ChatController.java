@@ -1,11 +1,11 @@
 package com.traders.tradersback.controller;
 
 import com.traders.tradersback.dto.ChatMessageDTO;
+import com.traders.tradersback.dto.ChatMessageResponseDTO;
 import com.traders.tradersback.model.ChatMessage;
 import com.traders.tradersback.model.Member;
 import com.traders.tradersback.repository.MemberRepository;
 import com.traders.tradersback.service.ChatService;
-import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -74,14 +74,8 @@ public class ChatController {
     }
 
     @GetMapping("/room/{chatRoomId}/messages")
-    public ResponseEntity<List<ChatMessage>> getMessagesByChatRoom(@PathVariable Long chatRoomId) {
-        try {
-            List<ChatMessage> messages = chatService.getMessagesByChatRoomId(chatRoomId);
-            return ResponseEntity.ok(messages);
-        } catch (EntityNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<List<ChatMessageResponseDTO>> getMessagesByChatRoom(@PathVariable Long chatRoomId) {
+        List<ChatMessageResponseDTO> messages = chatService.getMessagesByChatRoomIdWithNames(chatRoomId);
+        return ResponseEntity.ok(messages);
     }
 }

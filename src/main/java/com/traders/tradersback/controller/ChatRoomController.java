@@ -34,9 +34,12 @@ public class ChatRoomController {
             return ResponseEntity.badRequest().body("Product is not available for chat");
         }
 
+        chatRoomDTO.setStatus("거래중");
+
         ChatRoom chatRoom = chatRoomService.createOrGetChatRoom(chatRoomDTO.getSellerId(), chatRoomDTO.getBuyerId(), chatRoomDTO.getProductId(), chatRoomDTO.getStatus());
         return ResponseEntity.ok(chatRoom);
     }
+
 
     @PatchMapping("/update/{chatRoomId}/status")
     public ResponseEntity<?> updateChatRoomStatus(@PathVariable Long chatRoomId, @RequestBody String status) {
