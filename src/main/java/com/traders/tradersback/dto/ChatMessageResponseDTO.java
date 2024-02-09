@@ -4,13 +4,13 @@ import java.time.LocalDateTime;
 
 public class ChatMessageResponseDTO {
 
-    private String senderName; // 메시지를 보낸 사람의 이름
-    private String otherPartyName; // 메시지의 상대방 이름 (판매자 또는 구매자 중 하나)
-    private String message; // 메시지 본문
-    private Long chatRoomId; // 채팅방 ID
-    private LocalDateTime timestamp; // 메시지 전송 시간
+    private String senderName;
+    private String otherPartyName;
+    private String message;
+    private Long chatRoomId;
+    private LocalDateTime timestamp;
 
-    // 생성자, 게터, 세터...
+    // 생성자
     public ChatMessageResponseDTO(String senderName, String otherPartyName, String message, Long chatRoomId, LocalDateTime timestamp) {
         this.senderName = senderName;
         this.otherPartyName = otherPartyName;
@@ -19,24 +19,24 @@ public class ChatMessageResponseDTO {
         this.timestamp = timestamp;
     }
 
-    // 생성자, 게터, 세터...
-
-
-
-
-    public void setMessage(String message) {
-        this.message = message;
+    // 게터 메소드 추가
+    public String getSenderName() {
+        return senderName;
     }
 
-
-
-    public void setChatRoomId(Long chatRoomId) {
-        this.chatRoomId = chatRoomId;
+    public String getOtherPartyName() {
+        return otherPartyName;
     }
 
+    public String getMessage() {
+        return message;
+    }
 
+    public Long getChatRoomId() {
+        return chatRoomId;
+    }
 
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+    public LocalDateTime getTimestamp() {
+        return timestamp;
     }
 }

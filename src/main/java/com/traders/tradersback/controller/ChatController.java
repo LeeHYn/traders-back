@@ -78,4 +78,5 @@ public class ChatController {
         List<ChatMessageResponseDTO> messages = chatService.getMessagesByChatRoomIdWithNames(chatRoomId);
         return ResponseEntity.ok(messages);
     }
+
 }

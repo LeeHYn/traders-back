@@ -61,10 +61,26 @@ public class ChatService {
                 .orElseThrow(() -> new EntityNotFoundException("Buyer not found: " + chatRoom.getBuyerId()));
 
         return messages.stream().map(message -> {
-            String senderName = message.getSenderId().equals(seller.getMemberNum()) ? seller.getMemberName() : buyer.getMemberName();
-            String otherPartyName = message.getSenderId().equals(seller.getMemberNum()) ? buyer.getMemberName() : seller.getMemberName();
+            String senderName;
+            String otherPartyName;
+
+            if (message.getSenderId().equals(seller.getMemberNum())) {
+                senderName = seller.getMemberName();
+                otherPartyName = buyer.getMemberName();
+            } else if (message.getSenderId().equals(buyer.getMemberNum())) {
+                senderName = buyer.getMemberName();
+                otherPartyName = seller.getMemberName();
+            } else {
+                // 이 경우는 채팅 메시지의 송신자가 현재 채팅방의 구매자나 판매자와 일치하지 않음을 의미합니다.
+                // 이러한 상황을 어떻게 처리할지는 애플리케이션의 요구사항에 따라 다릅니다.
+                // 예를 들어, '알 수 없음'으로 처리할 수 있습니다.
+                logger.warn("Message sender does not match buyer or seller in chatRoomId: {}", chatRoomId);
+                senderName = "알 수 없음";
+                otherPartyName = "알 수 없음";
+            }
 
             return new ChatMessageResponseDTO(senderName, otherPartyName, message.getMessage(), message.getChatRoomId(), message.getTimestamp());
         }).collect(Collectors.toList());
     }
+
 }
