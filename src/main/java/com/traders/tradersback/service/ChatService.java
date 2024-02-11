@@ -37,22 +37,27 @@ public class ChatService {
         }
 
         try {
+            // 메시지에 현재 시각을 타임스탬프로 설정
             chatMessage.setTimestamp(LocalDateTime.now());
+            // 메시지를 데이터베이스에 저장
             return chatMessageRepository.save(chatMessage);
         } catch (Exception e) {
+            // 메시지 저장 중 발생하는 예외를 처리
             throw new ServiceException("메시지 저장 중 오류가 발생했습니다.", e);
         }
     }
 
-
     public List<ChatMessageResponseDTO> getMessagesByChatRoomIdWithNames(Long chatRoomId) {
         logger.debug("Fetching messages for chat room ID: {}", chatRoomId);
+        // 주어진 채팅방 ID에 대한 모든 메시지를 조회
         List<ChatMessage> messages = chatMessageRepository.findByChatRoomId(chatRoomId);
         if (messages.isEmpty()) {
+            // 조회된 메시지가 없을 경우, 빈 리스트 반환
             logger.info("No messages found for chatRoomId: {}. Returning empty list.", chatRoomId);
             return new ArrayList<>();
         }
 
+        // 채팅방, 구매자, 판매자 정보 조회
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new EntityNotFoundException("ChatRoom not found: " + chatRoomId));
         Member seller = memberRepository.findById(chatRoom.getSellerId())
@@ -60,6 +65,8 @@ public class ChatService {
         Member buyer = memberRepository.findById(chatRoom.getBuyerId())
                 .orElseThrow(() -> new EntityNotFoundException("Buyer not found: " + chatRoom.getBuyerId()));
 
+        // 조회된 메시지를 ChatMessageResponseDTO로 변환하여 반환
+        // 각 메시지에 대해 송신자와 수신자의 이름을 설정
         return messages.stream().map(message -> {
             String senderName;
             String otherPartyName;
@@ -71,9 +78,7 @@ public class ChatService {
                 senderName = buyer.getMemberName();
                 otherPartyName = seller.getMemberName();
             } else {
-                // 이 경우는 채팅 메시지의 송신자가 현재 채팅방의 구매자나 판매자와 일치하지 않음을 의미합니다.
-                // 이러한 상황을 어떻게 처리할지는 애플리케이션의 요구사항에 따라 다릅니다.
-                // 예를 들어, '알 수 없음'으로 처리할 수 있습니다.
+                // 송신자가 구매자나 판매자와 일치하지 않는 경우의 처리
                 logger.warn("Message sender does not match buyer or seller in chatRoomId: {}", chatRoomId);
                 senderName = "알 수 없음";
                 otherPartyName = "알 수 없음";
@@ -82,5 +87,4 @@ public class ChatService {
             return new ChatMessageResponseDTO(senderName, otherPartyName, message.getMessage(), message.getChatRoomId(), message.getTimestamp());
         }).collect(Collectors.toList());
     }
-
 }
