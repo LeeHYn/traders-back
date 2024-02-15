@@ -20,8 +20,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .cors().and()  // CORS 설정 활성화
                 .csrf().disable()  // CSRF 보호 비활성화
                 .authorizeRequests()
-                // 인증이 필요한 경로 먼저 설정
-                .antMatchers("/api/products/add", "/api/fraud/report").authenticated()
                 // 그 외 모든 요청에 대해서는 접근 허용
                 .antMatchers("/**").permitAll()
                 .antMatchers("/api/chat/**").permitAll()

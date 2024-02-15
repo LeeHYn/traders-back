@@ -35,48 +35,62 @@ public class ProductService {
     private final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
 
-    // 새로운 물품을 데이터베이스에 추가하는 메소드
-    @Transactional
+
+    // 상품 추가 메소드
     public Product addProduct(ProductDTO productDTO) {
+        logger.info("상품 추가 시작: {}", productDTO.getProductName());
+
         if (productDTO.getImageFiles() == null || productDTO.getImageFiles().isEmpty()) {
-        throw new IllegalArgumentException("최소 하나의 이미지가 필요합니다");
-    }
+            logger.warn("상품 이미지가 없습니다: {}", productDTO.getProductName());
+            throw new IllegalArgumentException("최소 하나의 이미지가 필요합니다");
+        }
 
         try {
+            logger.debug("회원 ID로 회원 조회: {}", productDTO.getMemberId());
             Member member = memberRepository.findByMemberId(productDTO.getMemberId());
             if (member == null) {
+                logger.warn("회원을 찾을 수 없습니다: {}", productDTO.getMemberId());
                 throw new IllegalArgumentException("회원을 찾을 수 없습니다");
             }
 
             Product product = new Product();
-            // 찾은 회원의 memberNum을 설정
-            product.setMemberNum(member.getMemberNum());
-            product.setMainCategoryNum(productDTO.getMainCategoryNum());
-            product.setProductName(productDTO.getProductName());
-            product.setPrice(productDTO.getPrice());
-            product.setProductDescription(productDTO.getProductDescription());
-            product.setProductCondition(productDTO.getProductCondition());
-            product.setProductStatus(productDTO.getProductStatus());
+            // 중요 데이터 설정 로그
+            logger.debug("상품 정보 설정: 회원번호={}, 카테고리번호={}, 상품명={}",
+                    member.getMemberNum(), productDTO.getMainCategoryNum(), productDTO.getProductName());
 
+            // 상품 정보 설정
+            product.setMemberNum(member.getMemberNum()); // 회원 번호 설정
+            product.setMainCategoryNum(productDTO.getMainCategoryNum()); // 메인 카테고리 번호 설정
+            product.setProductName(productDTO.getProductName()); // 상품명 설정
+            product.setPrice(productDTO.getPrice()); // 가격 설정
+            product.setProductDescription(productDTO.getProductDescription()); // 상품 설명 설정
+            product.setProductCondition(productDTO.getProductCondition()); // 상품 상태 설정
+            product.setProductStatus(productDTO.getProductStatus()); // 상품 판매 상태 설정
+            product.setCreatedAt(LocalDateTime.now()); // 생성 시간 설정
 
-            // 제품 저장
             Product savedProduct = productRepository.save(product);
+            logger.info("상품 저장 완료: 상품번호={}", savedProduct.getProductNum());
 
-            // 이미지 파일 처리 및 저장
             for (MultipartFile file : productDTO.getImageFiles()) {
+                logger.debug("이미지 파일 처리 시작: 파일명={}", file.getOriginalFilename());
                 String imageUrl = imageService.saveImage(file); // 이미지 파일 저장 및 URL 반환
+                logger.debug("이미지 파일 저장 완료: URL={}", imageUrl);
+
                 ProductImage productImage = new ProductImage();
                 productImage.setProductNum(savedProduct.getProductNum());
                 productImage.setImageUrl(imageUrl);
                 productImageRepository.save(productImage);
+                logger.debug("상품 이미지 정보 저장: 상품번호={}, URL={}", savedProduct.getProductNum(), imageUrl);
             }
 
             return savedProduct;
         } catch (Exception ex) {
-            logger.error("Error adding product: ", ex); // 로그에 오류와 스택 트레이스 출력
+            logger.error("상품 추가 중 오류 발생: ", ex);
             throw new RuntimeException("Error adding product", ex);
         }
     }
+
+
     //제품의 번호에 따른 이미지를 반환하는 메소드
     public List<ProductImage> getProductImages(Long productNum) {
         return productImageRepository.findByProductNum(productNum);
