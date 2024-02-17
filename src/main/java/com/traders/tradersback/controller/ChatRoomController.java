@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.List;
 
 
 @RestController
@@ -60,6 +61,17 @@ public class ChatRoomController {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("An error occurred: " + e.getMessage());
+        }
+    }
+    // 사용자의 채팅방 목록 조회
+    @GetMapping("/user/{userId}/rooms")
+    public ResponseEntity<List<ChatRoom>> getChatRoomsByUserId(@PathVariable Long userId) {
+        try {
+            List<ChatRoom> chatRooms = chatRoomService.getChatRoomsByUserId(userId);
+            return ResponseEntity.ok(chatRooms);
+        } catch (Exception e) {
+            logger.error("Error getting chat rooms for user: {}", userId, e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

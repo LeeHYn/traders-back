@@ -14,4 +14,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     // 거래 정보 조회를 위한 메소드
     Optional<Transaction> findByProductNumAndSellerNumAndBuyerNum(Long productNum, Long sellerNum, Long buyerNum);
+
+    // 사용자가 구매자로 있는 거래를 찾는 메소드
+    List<Transaction> findByBuyerNum(Long buyerNum);
 }
+

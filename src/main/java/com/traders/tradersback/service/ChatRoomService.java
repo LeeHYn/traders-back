@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,5 +69,18 @@ public class ChatRoomService {
     public ChatRoom getChatRoomById(Long chatRoomId) {
         return chatRoomRepository.findById(chatRoomId).orElseThrow(() ->
                 new EntityNotFoundException("ChatRoom with id " + chatRoomId + " not found"));
+    }
+
+    public List<ChatRoom> getChatRoomsByUserId(Long userId) {
+        // 판매자 또는 구매자로서의 채팅방 목록을 조회
+        List<ChatRoom> sellerRooms = chatRoomRepository.findBySellerId(userId);
+        List<ChatRoom> buyerRooms = chatRoomRepository.findByBuyerId(userId);
+
+        // 두 목록을 하나로 합치기
+        List<ChatRoom> allRooms = new ArrayList<>();
+        allRooms.addAll(sellerRooms);
+        allRooms.addAll(buyerRooms);
+
+        return allRooms;
     }
 }
