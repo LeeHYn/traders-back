@@ -64,7 +64,7 @@ public class ChatRoomController {
         }
     }
     // 사용자의 채팅방 목록 조회
-    @GetMapping("/user/{userId}/rooms")
+    @GetMapping("/{userId}")
     public ResponseEntity<List<ChatRoom>> getChatRoomsByUserId(@PathVariable Long userId) {
         try {
             List<ChatRoom> chatRooms = chatRoomService.getChatRoomsByUserId(userId);

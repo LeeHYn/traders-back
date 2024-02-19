@@ -16,6 +16,7 @@ import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/products")
@@ -145,13 +146,25 @@ public class ProductController {
     }
     // 검색어로 카테고리 또는 제품 이름 검색
     @GetMapping("/search")
-    public ResponseEntity<?> searchProducts(@RequestParam String query) {
+    public ResponseEntity<?> searchProducts(@RequestParam String query, @RequestParam Optional<Long> memberNum) {
         try {
-            List<ProductDTO> products = productService.searchProducts(query);
+            List<ProductDTO> products = productService.searchProducts(query, memberNum);
             return ResponseEntity.ok(products);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error searching products: " + ex.getMessage());
         }
     }
+    @GetMapping("/similar/{productNum}")
+    public ResponseEntity<List<ProductDTO>> findSimilarProducts(@PathVariable Long productNum) {
+        try {
+            List<ProductDTO> productsDTO = productService.findProductsInSameCategory(productNum);
+            return ResponseEntity.ok(productsDTO);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(null);
+        }
+    }
+
 }

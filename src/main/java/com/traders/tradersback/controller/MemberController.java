@@ -45,20 +45,25 @@ public class MemberController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody MemberLoginDto memberLoginDto, HttpServletResponse response) {
         try {
+            // 직접 login 메서드를 호출하여 AuthResponse 객체를 받아옵니다.
             AuthResponse authResponse = memberService.login(memberLoginDto.getMemberId(), memberLoginDto.getMemberPassword());
-            String token = authResponse.getAccessToken(); // getToken 대신 getAccessToken 사용
-            // JWT 토큰을 쿠키에 저장
-            Cookie cookie = new Cookie("jwtToken", token);
+
+            // JWT 토큰을 쿠키에 저장합니다.
+            Cookie cookie = new Cookie("jwtToken", authResponse.getAccessToken());
             cookie.setHttpOnly(true); // HttpOnly 설정
             cookie.setSecure(true); // HTTPS 환경에서만 쿠키 전송
             cookie.setPath("/"); // 쿠키의 경로 설정
             response.addCookie(cookie);
 
+            // 로그인 성공 시 반환되는 AuthResponse 객체를 그대로 ResponseEntity에 담아 반환합니다.
+            // 이 객체는 필요한 모든 정보(예: memberNum, memberId, accessToken)를 이미 포함하고 있습니다.
             return ResponseEntity.ok(authResponse);
         } catch (Exception ex) {
+            // 예외 처리
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
         }
     }
+
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
@@ -133,5 +138,11 @@ public class MemberController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @GetMapping("X/{memberNum}")//회원번호로 상대 id 조회
+    public ResponseEntity<Member> getMemberByMemberNum(@PathVariable Long memberNum) {
+        Member member = memberService.getMemberByMemberNum(memberNum);
+        return ResponseEntity.ok(member);
     }
 }

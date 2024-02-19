@@ -44,6 +44,7 @@ public class ProductDTO {
                 .map(ProductImage::getImageUrl)
                 .collect(Collectors.toList());
     }
+
     public String getMainCategoryName() {
         return mainCategoryName;
     }

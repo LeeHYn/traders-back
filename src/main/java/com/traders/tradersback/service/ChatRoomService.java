@@ -26,8 +26,12 @@ public class ChatRoomService {
     private TransactionRepository transactionRepository;
     @Autowired
     private static final Logger logger = LoggerFactory.getLogger(ChatRoomService.class);
-
+    @Autowired
+    private ProductService productService;
     public ChatRoom createOrGetChatRoom(Long sellerId, Long buyerId, Long productId, String status) {
+        // 품목 이름 조회
+        String productName = productService.getProductNameById(productId);
+
         // 거래(transaction) 정보 생성 또는 확인
         Transaction transaction = createOrGetTransaction(sellerId, buyerId, productId);
 
@@ -38,12 +42,12 @@ public class ChatRoomService {
             chatRoom.setSellerId(sellerId);
             chatRoom.setBuyerId(buyerId);
             chatRoom.setProductId(productId);
-            chatRoom.setStatus(status); // 상태 설정
-            chatRoom.setTransactionId(transaction.getTransactionNum()); // 거래 ID 설정
+            chatRoom.setStatus(status);
+            chatRoom.setTransactionId(transaction.getTransactionNum());
+            chatRoom.setProductName(productName); // 품목 이름 설정
             return chatRoomRepository.save(chatRoom);
         });
     }
-
     private Transaction createOrGetTransaction(Long sellerId, Long buyerId, Long productId) {
         // 거래 확인 로직 (예: productId, sellerId, buyerId를 기준으로 기존 거래 확인)
         Optional<Transaction> existingTransaction = transactionRepository.findByProductNumAndSellerNumAndBuyerNum(productId, sellerId, buyerId);

@@ -5,6 +5,7 @@ import com.traders.tradersback.dto.ProductDTO;
 import com.traders.tradersback.model.*;
 import com.traders.tradersback.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.slf4j.Logger;
@@ -90,7 +91,12 @@ public class ProductService {
         }
     }
 
-
+    //제품 번호에 따른 이름을 반환하는 메소드
+    public String getProductNameById(Long productId) {
+        return productRepository.findById(productId)
+                .map(Product::getProductName)
+                .orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
+    }
     //제품의 번호에 따른 이미지를 반환하는 메소드
     public List<ProductImage> getProductImages(Long productNum) {
         return productImageRepository.findByProductNum(productNum);
@@ -222,24 +228,34 @@ public class ProductService {
         return priceTrendDTO;
     }
 
-    // 검색어로 카테고리 이름 또는 제품 이름 검색
-    public List<ProductDTO> searchProducts(String query) {
+    public List<ProductDTO> searchProducts(String query, Optional<Long> memberNum) {
+        List<Product> products = new ArrayList<>();
+
         try {
             // 먼저 카테고리 이름으로 검색 시도
             Optional<MainCategory> categoryOpt = mainCategoryRepository.findByMainCategoryName(query);
             if (categoryOpt.isPresent()) {
-                // 카테고리 이름으로 일치하는 제품 검색
                 Long mainCategoryNum = categoryOpt.get().getMainCategoryNum();
-                List<Product> productsByCategory = productRepository.findByMainCategoryNum(mainCategoryNum);
-                return mapProductsToDTOs(productsByCategory);
+                products = productRepository.findByMainCategoryNum(mainCategoryNum);
             } else {
-                // 카테고리 이름이 일치하지 않으면 제품 이름으로 검색
-                List<Product> productsByName = productRepository.findByProductNameContaining(query);
-                return mapProductsToDTOs(productsByName);
+                products = productRepository.findByProductNameContaining(query);
             }
+
+            // 로그인한 사용자의 경우, 검색 기록 저장
+            memberNum.ifPresent(mn -> saveSearchHistory(mn, query));
+
+            return mapProductsToDTOs(products);
         } catch (Exception ex) {
             throw new RuntimeException("Error searching products", ex);
         }
+    }
+    // 검색 기록을 저장하는 메소드
+    private void saveSearchHistory(Long memberNum, String searchTerm) {
+        SearchHistory searchHistory = new SearchHistory();
+        searchHistory.setMemberNum(memberNum);
+        searchHistory.setSearchTerm(searchTerm);
+        searchHistory.setSearchDate(LocalDateTime.now()); // 현재 시간 설정
+        searchHistoryRepository.save(searchHistory);
     }
 
     private List<ProductDTO> mapProductsToDTOs(List<Product> products) {
@@ -248,5 +264,23 @@ public class ProductService {
             return new ProductDTO(product, images);
         }).collect(Collectors.toList());
     }
+    public List<ProductDTO> findProductsInSameCategory(Long productNum) {
+        // 주어진 ID로 상품을 검색하여 해당 상품의 카테고리를 알아냅니다.
+        Product product = productRepository.findById(productNum)
+                .orElseThrow(() -> new EntityNotFoundException("해당 ID의 상품을 찾을 수 없습니다: " + productNum));
 
+        // 찾아낸 상품의 카테고리 ID를 사용하여 같은 카테고리에 속하는 상품들을 검색합니다.
+        Long mainCategoryNum = product.getMainCategoryNum();
+        List<Product> productsInSameCategory = productRepository.findByMainCategoryNum(mainCategoryNum);
+
+        // 결과에서 원래의 상품은 제외합니다(선택적).
+        productsInSameCategory.removeIf(p -> p.getProductNum().equals(productNum));
+
+        // 상품들의 이미지 정보를 포함하여 ProductDTO 리스트로 변환하여 반환합니다.
+        return productsInSameCategory.stream().map(prod -> {
+            List<ProductImage> images = getProductImages(prod.getProductNum());
+            // 직접 ProductDTO 객체를 생성할 때 Product 객체와 List<ProductImage> 객체 리스트를 전달합니다.
+            return new ProductDTO(prod, images);
+        }).collect(Collectors.toList());
+    }
 }
