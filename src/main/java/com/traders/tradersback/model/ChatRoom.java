@@ -24,9 +24,16 @@ public class ChatRoom {
     private Long productId; // 거래 ID
     @Column(name = "status")
     private String status; // 채팅방의 상태
-
+    @Column(name = "product_name")
+    private String productName; // 추가된 필드
     // 게터와 세터
+    public String getProductName() {
+        return productName;
+    }
 
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
     public Long getProductId() {
         return productId;
     }

@@ -12,7 +12,13 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    public List<Transaction> getTransactionsByBuyerId(Long buyerId) {
-        return transactionRepository.findByBuyerNum(buyerId);
+    // 사용자의 거래 내역을 가져오는 메소드
+    public List<Transaction> getTransactionsByUserId(Long userId) {
+        List<Transaction> buyerTransactions = transactionRepository.findByBuyerNum(userId);
+        List<Transaction> sellerTransactions = transactionRepository.findBySellerNum(userId);
+
+        // 구매자와 판매자로서의 거래 내역을 모두 합쳐서 반환
+        buyerTransactions.addAll(sellerTransactions);
+        return buyerTransactions;
     }
 }

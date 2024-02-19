@@ -83,7 +83,9 @@ public class MemberService {
 
                 String accessToken = createTokenForMember(member);
                 createAndSaveRefreshTokenForMember(member); // 리프레시 토큰은 생성하되 클라이언트에 반환하지 않음
-                return new AuthResponse(member.getMemberId(), accessToken); // 엑세스 토큰만 반환
+
+                // AuthResponse 객체 생성 시 memberNum도 포함하여 생성
+                return new AuthResponse(member.getMemberNum(), member.getMemberId(), accessToken); // memberNum 추가
             } else {
                 // 비밀번호 불일치 로그
                 System.out.println("Password mismatch for member: " + member.getMemberId());
@@ -94,6 +96,7 @@ public class MemberService {
         }
         throw new RuntimeException("Login failed");
     }
+
 
 
     private String createTokenForMember(Member member) {

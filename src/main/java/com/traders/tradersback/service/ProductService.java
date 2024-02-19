@@ -90,7 +90,12 @@ public class ProductService {
         }
     }
 
-
+    //제품 번호에 따른 이름을 반환하는 메소드
+    public String getProductNameById(Long productId) {
+        return productRepository.findById(productId)
+                .map(Product::getProductName)
+                .orElseThrow(() -> new EntityNotFoundException("Product with id " + productId + " not found"));
+    }
     //제품의 번호에 따른 이미지를 반환하는 메소드
     public List<ProductImage> getProductImages(Long productNum) {
         return productImageRepository.findByProductNum(productNum);
